@@ -2,7 +2,7 @@
 #include <iostream>
 #include <thread>
 #include <serialPort.h>
-#include <ultrasonic/ultrarange.h>
+#include <ultrasonic_ros_driver/ultrarange.h>
 #include <std_msgs/Header.h>
 #include <ros/time.h>
 #include <signal.h>
@@ -13,13 +13,19 @@ serialPort sp;
 ros::Publisher ultra_pub;
 int count = 0;
 
+void printData(const uint8_t *data)
+{
+    for (int i = 0; i < 16; i++)
+    {
+        std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned>(data[i]) << " ";
+        
+    }
+    std::cout << std::endl;
+}
+
 bool checkData(const uint8_t *data)
 {
-    if (data[0] != 0xaa || data[16] != 0xaa || data[32] != 0xaa)
-        return false;
-    if (data[6] != 0x06 || data[22] != 0x06 || data[38] != 0x06)
-        return false;
-    if (data[7] != 0x11 || data[23] != 0x12 || data[39] != 0x13)
+    if (data[0] != 0xaa || data[3]!=0x08||data[6] != 0x06)
         return false;
     return true;
 }
@@ -37,10 +43,11 @@ int bcd2demical(uint8_t bcd)
     return sum;
 }
 
-bool genMsg(ultrasonic::ultrarange &range, const uint8_t *data)
+bool genMsg(ultrasonic_ros_driver::ultrarange &range, const uint8_t *data)
 {
     if (!checkData(data))
         return false;
+    // printData(data);
     std_msgs::Header header;
     header.frame_id = "/ultrasonic";
     header.stamp = ros::Time::now();
@@ -70,21 +77,13 @@ bool genMsg(ultrasonic::ultrarange &range, const uint8_t *data)
     return true;
 }
 
-void printData(const uint8_t *data)
-{
-    for (int i = 0; i < 48; i++)
-    {
-        std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned>(data[i]) << " ";
-        if ((i + 1) % 16 == 0)
-            std::cout << std::endl;
-    }
-}
+
 
 void serialRead()
 {
     int nread;
     uint8_t data[96];
-    ultrasonic::ultrarange range;
+    ultrasonic_ros_driver::ultrarange range;
     bool find_sof = true;
     bool first_frame = true;
     int count = 0;
@@ -104,7 +103,7 @@ void serialRead()
         else
         {
             if (first_frame)
-            { // 第一帧只读15个字节
+            { // 第一帧只读15个字节    
                 uint8_t temp_data[15];
                 if ((nread = sp.readBuffer(temp_data, 15)) == 15)
                 {
@@ -115,7 +114,7 @@ void serialRead()
                         data[i + 1] = temp_data[i];
                     }
                     if (genMsg(range, data))
-                    {
+                    {           
                         count++;
                         first_frame = false;
                     }
@@ -156,7 +155,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "ultrasonic_pub_node");
     ros::NodeHandle nh("");
     signal(SIGINT, mySigintHandler);
-    ultra_pub = nh.advertise<ultrasonic::ultrarange>("/ultra_range", 10);
+    ultra_pub = nh.advertise<ultrasonic_ros_driver::ultrarange>("/ultra_range", 10);
     sp.OpenPort("/dev/ttyUSB0");
     sp.setup(9600, 0, 8, 1, 'N');
     sp.writeBuffer(STOPCMD, 16);
