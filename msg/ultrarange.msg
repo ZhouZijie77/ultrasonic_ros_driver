@@ -1,0 +1,13 @@
+Header header
+uint8 channel_1
+uint8 channel_2
+uint8 channel_3
+uint8 channel_4
+uint8 channel_5
+uint8 channel_6
+uint8 channel_7
+uint8 channel_8
+uint8 channel_9
+uint8 channel_10
+uint8 channel_11
+uint8 channel_12
