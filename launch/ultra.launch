@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="ultrasonic_ros_driver" type="ultrasonic_ros_driver_node" name="ultrasonic_ros_driver_node" output="screen">
+        <param name="USB port" value="/dev/ttyUSB0"/>
+    
+    </node>
+</launch>
