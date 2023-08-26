@@ -130,7 +130,7 @@ void serialRead()
                         if (count == 3)
                         {
                             ultra_pub.publish(range);
-                            std::cout << "publish" << std::endl;
+                            ROS_INFO("publish");
                             count = 0;
                         }
                     }
@@ -153,13 +153,20 @@ void mySigintHandler(int sig)
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "ultrasonic_pub_node");
-    ros::NodeHandle nh("");
+    ros::NodeHandle nh("~");
     signal(SIGINT, mySigintHandler);
     ultra_pub = nh.advertise<ultrasonic_ros_driver::ultrarange>("/ultra_range", 10);
-    sp.OpenPort("/dev/ttyUSB0");
+    std::string dev_port;
+    nh.param<std::string>("dev_port", dev_port, "/dev/ttyUSB0");
+    if(!sp.OpenPort(dev_port.c_str())){
+        ROS_ERROR("Failed to open port %s", dev_port.c_str());
+        return 1;
+    }
     sp.setup(9600, 0, 8, 1, 'N');
     sp.writeBuffer(STOPCMD, 16);
     sp.writeBuffer(STARTCMD, 16);
     serialRead();
+    sp.writeBuffer(STOPCMD, 16);
+    sp.ClosePort();
     return 0;
 }
