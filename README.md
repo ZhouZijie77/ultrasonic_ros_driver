@@ -13,7 +13,7 @@ git clone https://github.com/ZhouZijie77/ultrasonic_ros_driver.git
 cd ..
 catkin_make
 source devel/setup.bash
-rosrun ultrasonic_ros_driver ultrasonic_ros_driver_node
+roslaunch ultrasonic_ros_driver ultra.launch
 ```
 
 
