@@ -1,2 +1,2 @@
-Header header
-uint16 range
+string frame_id
+int16 range

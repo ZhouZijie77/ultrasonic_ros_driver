@@ -50,59 +50,47 @@ bool genMsg(ultrasonic_ros_driver::ultrachannels &msg, const uint8_t *data)
         return false;
     // printData(data);
     msg.channels.resize(12);
-    ros::Time current_time = ros::Time::now();
+    msg.header.stamp = ros::Time::now();
     if (data[7] == 0x11)
     {
-        msg.channels[0].header.frame_id = "channel1";
-        msg.channels[0].header.stamp = current_time;
+        msg.channels[0].frame_id = "channel1";
         msg.channels[0].range = bcd2demical(data[8]) * 100 + bcd2demical(data[9]);
 
-        msg.channels[1].header.frame_id = "channel2";
-        msg.channels[1].header.stamp = current_time;
+        msg.channels[1].frame_id = "channel2";
         msg.channels[1].range = bcd2demical(data[10]) * 100 + bcd2demical(data[11]);
 
-        msg.channels[2].header.frame_id = "channel3";
-        msg.channels[2].header.stamp = current_time;
+        msg.channels[2].frame_id = "channel3";
         msg.channels[2].range = bcd2demical(data[12]) * 100 + bcd2demical(data[13]);
 
-        msg.channels[3].header.frame_id = "channel4";
-        msg.channels[3].header.stamp = current_time;
+        msg.channels[3].frame_id = "channel4";
         msg.channels[3].range = bcd2demical(data[14]) * 100 + bcd2demical(data[15]);
     }
     else if (data[7] == 0x12)
     {
-        msg.channels[4].header.frame_id = "channel5";
-        msg.channels[4].header.stamp = current_time;
+        msg.channels[4].frame_id = "channel5";
         msg.channels[4].range = bcd2demical(data[8]) * 100 + bcd2demical(data[9]);
 
-        msg.channels[5].header.frame_id = "channel6";
-        msg.channels[5].header.stamp = current_time;
+        msg.channels[5].frame_id = "channel6";
         msg.channels[5].range = bcd2demical(data[10]) * 100 + bcd2demical(data[11]);
 
-        msg.channels[6].header.frame_id = "channel7";
-        msg.channels[6].header.stamp = current_time;
+        msg.channels[6].frame_id = "channel7";
         msg.channels[6].range = bcd2demical(data[12]) * 100 + bcd2demical(data[13]);
 
-        msg.channels[7].header.frame_id = "channel8";
-        msg.channels[7].header.stamp = current_time;
+        msg.channels[7].frame_id = "channel8";
         msg.channels[7].range = bcd2demical(data[14]) * 100 + bcd2demical(data[15]);
     }
     else
     {
-        msg.channels[8].header.frame_id = "channel9";
-        msg.channels[8].header.stamp = current_time;
+        msg.channels[8].frame_id = "channel9";
         msg.channels[8].range = bcd2demical(data[8]) * 100 + bcd2demical(data[9]);
 
-        msg.channels[9].header.frame_id = "channel10";
-        msg.channels[9].header.stamp = current_time;
+        msg.channels[9].frame_id = "channel10";
         msg.channels[9].range = bcd2demical(data[10]) * 100 + bcd2demical(data[11]);
 
-        msg.channels[10].header.frame_id = "channel11";
-        msg.channels[10].header.stamp = current_time;
+        msg.channels[10].frame_id = "channel11";
         msg.channels[10].range = bcd2demical(data[12]) * 100 + bcd2demical(data[13]);
 
-        msg.channels[11].header.frame_id = "channel12";
-        msg.channels[11].header.stamp = current_time;
+        msg.channels[11].frame_id = "channel12";
         msg.channels[11].range = bcd2demical(data[14]) * 100 + bcd2demical(data[15]);
     }
     return true;
@@ -189,7 +177,7 @@ int main(int argc, char **argv)
     nh.param<std::string>("dev_port", dev_port, "/dev/ttyUSB0");
     nh.param<std::string>("output_topic", output_topic, "/ultra_range");
     signal(SIGINT, mySigintHandler);
-    ultra_pub = nh.advertise<ultrasonic_ros_driver::ultrarange>(output_topic, 10);
+    ultra_pub = nh.advertise<ultrasonic_ros_driver::ultrachannels>(output_topic, 1);
     
     
     if(!sp.OpenPort(dev_port.c_str())){
