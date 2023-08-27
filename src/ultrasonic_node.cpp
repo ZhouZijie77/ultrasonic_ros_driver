@@ -3,6 +3,7 @@
 #include <thread>
 #include <serialPort.h>
 #include <ultrasonic_ros_driver/ultrarange.h>
+#include <ultrasonic_ros_driver/ultrachannels.h>
 #include <std_msgs/Header.h>
 #include <ros/time.h>
 #include <signal.h>
@@ -43,36 +44,66 @@ int bcd2demical(uint8_t bcd)
     return sum;
 }
 
-bool genMsg(ultrasonic_ros_driver::ultrarange &range, const uint8_t *data)
+bool genMsg(ultrasonic_ros_driver::ultrachannels &msg, const uint8_t *data)
 {
     if (!checkData(data))
         return false;
     // printData(data);
-    std_msgs::Header header;
-    header.frame_id = "/ultrasonic";
-    header.stamp = ros::Time::now();
-    header.seq = 1;
-    range.header = header;
+    msg.channels.resize(12);
+    ros::Time current_time = ros::Time::now();
     if (data[7] == 0x11)
     {
-        range.channel_1 = bcd2demical(data[8]) * 100 + bcd2demical(data[9]);
-        range.channel_2 = bcd2demical(data[10]) * 100 + bcd2demical(data[11]);
-        range.channel_3 = bcd2demical(data[12]) * 100 + bcd2demical(data[13]);
-        range.channel_4 = bcd2demical(data[14]) * 100 + bcd2demical(data[15]);
+        msg.channels[0].header.frame_id = "channel1";
+        msg.channels[0].header.stamp = current_time;
+        msg.channels[0].range = bcd2demical(data[8]) * 100 + bcd2demical(data[9]);
+
+        msg.channels[1].header.frame_id = "channel2";
+        msg.channels[1].header.stamp = current_time;
+        msg.channels[1].range = bcd2demical(data[10]) * 100 + bcd2demical(data[11]);
+
+        msg.channels[2].header.frame_id = "channel3";
+        msg.channels[2].header.stamp = current_time;
+        msg.channels[2].range = bcd2demical(data[12]) * 100 + bcd2demical(data[13]);
+
+        msg.channels[3].header.frame_id = "channel4";
+        msg.channels[3].header.stamp = current_time;
+        msg.channels[3].range = bcd2demical(data[14]) * 100 + bcd2demical(data[15]);
     }
     else if (data[7] == 0x12)
     {
-        range.channel_5 = bcd2demical(data[8]) * 100 + bcd2demical(data[9]);
-        range.channel_6 = bcd2demical(data[10]) * 100 + bcd2demical(data[11]);
-        range.channel_7 = bcd2demical(data[12]) * 100 + bcd2demical(data[13]);
-        range.channel_8 = bcd2demical(data[14]) * 100 + bcd2demical(data[15]);
+        msg.channels[4].header.frame_id = "channel5";
+        msg.channels[4].header.stamp = current_time;
+        msg.channels[4].range = bcd2demical(data[8]) * 100 + bcd2demical(data[9]);
+
+        msg.channels[5].header.frame_id = "channel6";
+        msg.channels[5].header.stamp = current_time;
+        msg.channels[5].range = bcd2demical(data[10]) * 100 + bcd2demical(data[11]);
+
+        msg.channels[6].header.frame_id = "channel7";
+        msg.channels[6].header.stamp = current_time;
+        msg.channels[6].range = bcd2demical(data[12]) * 100 + bcd2demical(data[13]);
+
+        msg.channels[7].header.frame_id = "channel8";
+        msg.channels[7].header.stamp = current_time;
+        msg.channels[7].range = bcd2demical(data[14]) * 100 + bcd2demical(data[15]);
     }
     else
     {
-        range.channel_9 = bcd2demical(data[8]) * 100 + bcd2demical(data[9]);
-        range.channel_10 = bcd2demical(data[10]) * 100 + bcd2demical(data[11]);
-        range.channel_11 = bcd2demical(data[12]) * 100 + bcd2demical(data[13]);
-        range.channel_12 = bcd2demical(data[14]) * 100 + bcd2demical(data[15]);
+        msg.channels[8].header.frame_id = "channel9";
+        msg.channels[8].header.stamp = current_time;
+        msg.channels[8].range = bcd2demical(data[8]) * 100 + bcd2demical(data[9]);
+
+        msg.channels[9].header.frame_id = "channel10";
+        msg.channels[9].header.stamp = current_time;
+        msg.channels[9].range = bcd2demical(data[10]) * 100 + bcd2demical(data[11]);
+
+        msg.channels[10].header.frame_id = "channel11";
+        msg.channels[10].header.stamp = current_time;
+        msg.channels[10].range = bcd2demical(data[12]) * 100 + bcd2demical(data[13]);
+
+        msg.channels[11].header.frame_id = "channel12";
+        msg.channels[11].header.stamp = current_time;
+        msg.channels[11].range = bcd2demical(data[14]) * 100 + bcd2demical(data[15]);
     }
     return true;
 }
@@ -83,7 +114,7 @@ void serialRead()
 {
     int nread;
     uint8_t data[96];
-    ultrasonic_ros_driver::ultrarange range;
+    ultrasonic_ros_driver::ultrachannels msg;
     bool find_sof = true;
     bool first_frame = true;
     int count = 0;
@@ -113,7 +144,7 @@ void serialRead()
                     {
                         data[i + 1] = temp_data[i];
                     }
-                    if (genMsg(range, data))
+                    if (genMsg(msg, data))
                     {           
                         count++;
                         first_frame = false;
@@ -124,12 +155,12 @@ void serialRead()
             { // 之后读16字节
                 if ((nread = sp.readBuffer(data, 16)) == 16)
                 {
-                    if (genMsg(range, data))
+                    if (genMsg(msg, data))
                     {
                         count++;
                         if (count == 3)
                         {
-                            ultra_pub.publish(range);
+                            ultra_pub.publish(msg);
                             ROS_INFO("publish");
                             count = 0;
                         }
@@ -154,13 +185,16 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "ultrasonic_pub_node");
     ros::NodeHandle nh("~");
-    signal(SIGINT, mySigintHandler);
-    ultra_pub = nh.advertise<ultrasonic_ros_driver::ultrarange>("/ultra_range", 10);
-    std::string dev_port;
+    std::string dev_port, output_topic;
     nh.param<std::string>("dev_port", dev_port, "/dev/ttyUSB0");
+    nh.param<std::string>("output_topic", output_topic, "/ultra_range");
+    signal(SIGINT, mySigintHandler);
+    ultra_pub = nh.advertise<ultrasonic_ros_driver::ultrarange>(output_topic, 10);
+    
+    
     if(!sp.OpenPort(dev_port.c_str())){
         ROS_ERROR("Failed to open port %s", dev_port.c_str());
-        return 1;
+        ros::shutdown();
     }
     sp.setup(9600, 0, 8, 1, 'N');
     sp.writeBuffer(STOPCMD, 16);
@@ -168,5 +202,6 @@ int main(int argc, char **argv)
     serialRead();
     sp.writeBuffer(STOPCMD, 16);
     sp.ClosePort();
+    ros::shutdown();
     return 0;
 }

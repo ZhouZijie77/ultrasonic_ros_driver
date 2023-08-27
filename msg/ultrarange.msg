@@ -1,13 +1,2 @@
 Header header
-int16 channel_1
-int16 channel_2
-int16 channel_3
-int16 channel_4
-int16 channel_5
-int16 channel_6
-int16 channel_7
-int16 channel_8
-int16 channel_9
-int16 channel_10
-int16 channel_11
-int16 channel_12
+uint16 range
