@@ -189,7 +189,7 @@ int main(int argc, char **argv)
     sp.writeBuffer(STARTCMD, 16);
     serialRead();
     sp.writeBuffer(STOPCMD, 16);
-    sp.ClosePort();
-    ros::shutdown();
+    // sp.ClosePort();
+    // ros::shutdown();
     return 0;
 }
